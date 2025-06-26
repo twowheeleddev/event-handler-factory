@@ -1,26 +1,52 @@
 /**
- * Creates a click handler that logs a custom message and
- * tracks how many times it’s been invoked.
- * @param {string} label  A unique label for this handler
- * @returns {function(Event):void}
+ * Creates a configurable click-tracker
+ *
+ * @param {string} initialLabel A unique label for this handler
+ * @returns {{
+ * handler: function(Event): void,
+ * getCount: function(): number,
+ * reset: function(): void
+ * setLabel: function(string): void
+ * getLabel: function(): string}}
  */
-function createClickTracker(label) {
-  let count = 0; // private per-handler state
+function createClickTracker(initialLabel) {
+  let count = 0;
+  let label = initialLabel;
 
-  return function handleClick(event) {
+  function handler(event) {
     count += 1;
-    console.log(`[${label}] clicked ${count} time(s)`, event);
-    // e.g. sendAnalytics({ label, count, event });
+    console.log(
+      `[${label}] clicked ${count} time${count === 1 ? "" : "s"}`,
+      event
+    );
+    // e.g. sendAnalytics({ label, count, timestamp: Date.now() });
+  }
+
+  return {
+    handler,
+    getCount() {
+      return count;
+    },
+    reset() {
+      count = 0;
+    },
+    setLabel(newLabel) {
+      label = newLabel;
+    },
+    getLabel() {
+      return label;
+    },
   };
 }
 
-// Usage:
-// Suppose you have three buttons you want to track differently
+// Usage example
+const tracker = createClickTracker("save");
+document
+  .getElementById("saveButton")
+  .addEventListener("click", tracker.handler);
 
-const btnSave = document.getElementById("btn-save");
-const btnDelete = document.getElementById("btn-delete");
-const btnShare = document.getElementById("btn-share");
-
-btnSave.addEventListener("click", createClickTracker("save"));
-btnDelete.addEventListener("click", createClickTracker("delete"));
-btnShare.addEventListener("click", createClickTracker("share"));
+// examples continued
+console.log(tracker.getCount()); // 0
+tracker.reset();
+tracker.setLabel("quick-save");
+console.log(tracker.getLabel());
